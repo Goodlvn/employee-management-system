@@ -176,9 +176,17 @@ function addEmp() {
 };
 
 function viewAllEmp() {
-    connection.query("SELECT * FROM employee", (err, res) => {
-        if (err) throw err;
 
+    // SELECT employee.employee_id, employee.first_name, employee.last_name, role.title, role.salary, department.department
+    // FROM emp_trackerDB.employee 
+    // INNER JOIN emp_trackerDB.role ON employee.role_id=role.role_id
+    // INNER JOIN emp_trackerDB.department ON role.department_id=department.department_id;
+
+    connection.query(`SELECT employee.employee_id, employee.first_name, employee.last_name, 
+                    role.title, role.salary, department.department FROM employee 
+                    INNER JOIN role ON employee.role_id=role.role_id
+                    INNER JOIN department ON role.department_id=department.department_id;`, (err, res) => {
+        if (err) throw err;
         console.table(res);
         start();
     });
