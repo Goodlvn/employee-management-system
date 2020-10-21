@@ -66,10 +66,10 @@ function addDept() {
                     if (err) throw err;
                     console.log("Department added!");
                     start();
-                });   
+                });
         });
 
-        
+
 }
 
 function addRole() {
@@ -126,17 +126,8 @@ function addRole() {
 
 function addEmp() {
 
-    let departments = [];
-    let roles = [];
-
     connection.query("SELECT * FROM role", (err, res) => {
-        res.forEach(role => roles.push(role.title));
-    });
-
-    connection.query("SELECT * FROM department", (err, res) => {
-        if (err) throw err;
-
-        res.forEach(dept => departments.push(dept.department));
+        console.log(res[0].title);
         inquirer
             .prompt([
                 {
@@ -151,34 +142,22 @@ function addEmp() {
                 },
                 {
                     type: "list",
-                    message: "What department do they belong to?",
-                    choices: departments,
-                    name: "department"
-                },
-                {
-                    type: "list",
-                    message: "What is their title?",
-                    choices: roles,
+                    message: "What is their position?",
+                    choices: function allRoles() {
+                        var choiceArray = [];
+                        res.forEach(res => choiceArray.push(res.title));
+                        return choiceArray;
+                    },
                     name: "role"
                 },
             ])
             .then(answers => {
-
-                let deptID;
-                let roleID;
+                var roleID;
 
                 res.forEach(res => {
-                    if (answers.department === res.department) {
-                        deptID = res.department_id;
+                    if (answers.role === res.title) {
+                        roleID = res.role_id;
                     };
-                });
-
-                connection.query("SELECT * FROM role", (err, res) => {
-                    res.forEach(res => {
-                        if (answers.role === res.title) {
-                            roleID = res.role_id;
-                        };
-                    });
                 });
 
                 connection.query("INSERT INTO employee SET ?",
@@ -186,21 +165,21 @@ function addEmp() {
                         first_name: answers.firstName,
                         last_name: answers.lastName,
                         role_id: roleID,
-                        department_id: deptID
                     },
                     (err, res) => {
                         if (err) throw err;
                         console.log("Employee Added!");
                         start();
                     });
-            });
+            })
     });
-}
+};
 
 function viewAllEmp() {
     connection.query("SELECT * FROM employee", (err, res) => {
         if (err) throw err;
 
         console.table(res);
+        start();
     });
 };

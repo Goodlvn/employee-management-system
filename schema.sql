@@ -41,3 +41,46 @@ SELECT * FROM employee;
 SELECT * FROM role;
 SELECT * FROM department;
 SELECT * FROM facility;
+
+
+--   connection.query("SELECT * FROM department", (err, res) => {
+--         if (err) throw err;
+
+--         res.forEach(dept => departments.push(dept.department));
+--         inquirer
+--             .prompt([
+--                 {
+--                     type: "input",
+--                     message: "What is their first name?",
+--                     name: "firstName"
+--                 },
+--                 {
+--                     type: "input",
+--                     message: "What is their last name?",
+--                     name: "lastName"
+--                 },
+--                 {
+--                     type: "list",
+--                     message: "What is their title?",
+--                     choices: roles,
+--                     name: "role"
+--                 },
+--             ])
+--             .then(answers => {
+--                 var roleID = 0;
+
+--                 connection.query("SELECT * FROM role", (err, res) => {
+--                     res.forEach(res => {
+--                         if (answers.role === res.title) {
+--                             roleID = res.role_id;
+--                             console.log(roleID);
+
+--                         };
+--                     });
+--                 });
+
+                
+
+                
+--             });
+--     });
