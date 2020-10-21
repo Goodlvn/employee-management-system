@@ -22,7 +22,8 @@ function start() {
             {
                 type: "list",
                 message: "What would you like to do?",
-                choices: ["Add Employee", "Add Department", "Add Role", "View All Employees", "View All Employees By Department", "View All Employees By Manager"],
+                choices: ["Add Employee", "Add Department", "Add Role", "View All Employees", "View All Departments", "View All Roles",
+                    "Update Employee Roles"],
                 name: "initQuery"
             }
         ])
@@ -40,6 +41,15 @@ function start() {
                     break;
                 case "View All Employees":
                     viewAllEmp();
+                    break;
+                case "View All Departments":
+                    viewAllDept();
+                    break;
+                case "View All Roles":
+                    viewAllRoles();
+                    break;
+                case "Update Employee Roles":
+                    updateRoles();
                     break;
                 default:
                     console.log("Or do the default");
@@ -177,11 +187,6 @@ function addEmp() {
 
 function viewAllEmp() {
 
-    // SELECT employee.employee_id, employee.first_name, employee.last_name, role.title, role.salary, department.department
-    // FROM emp_trackerDB.employee 
-    // INNER JOIN emp_trackerDB.role ON employee.role_id=role.role_id
-    // INNER JOIN emp_trackerDB.department ON role.department_id=department.department_id;
-
     connection.query(`SELECT employee.employee_id, employee.first_name, employee.last_name, 
                     role.title, role.salary, department.department FROM employee 
                     INNER JOIN role ON employee.role_id=role.role_id
@@ -189,5 +194,88 @@ function viewAllEmp() {
         if (err) throw err;
         console.table(res);
         start();
+    });
+};
+
+function viewAllDept() {
+    connection.query(`SELECT department.department FROM department`, (err, res) => {
+        if (err) throw err;
+        console.table(res);
+        start();
+    });
+};
+
+function viewAllRoles() {
+    connection.query(`SELECT role.title, role.salary, department.department FROM role INNER JOIN department ON role.department_id=department.department_id`, (err, res) => {
+        if (err) throw err;
+        console.table(res);
+        start();
+    });
+};
+
+function updateRoles() {
+
+    var roleChoices = [];
+    var roleObjArray = [];
+
+    connection.query("SELECT * FROM role", (err, res) => {
+        res.forEach(res => roleChoices.push(res.title));
+        res.forEach(res => roleObjArray.push(res));
+    });
+
+    connection.query("SELECT * FROM employee", (err, res) => {
+        if (err) throw err;
+        inquirer
+            .prompt([
+                {
+                    type: "list",
+                    message: "Which employee would you like to update?",
+                    choices: function allEmp() {
+                        var choicesArray = [];
+                        res.forEach(res => choicesArray.push(`${res.first_name} ${res.last_name}`));
+                        return choicesArray;
+                    },
+                    name: "empChoice"
+                },
+                {
+                    type: "list",
+                    message: "What is their new role?",
+                    choices: roleChoices,
+                    name: "roleChoice"
+                },
+            ])
+            .then(answers => {
+                
+                var empID;
+                var roleID;
+
+                res.forEach(res => {
+                    if (answers.empChoice === `${res.first_name} ${res.last_name}`) {
+                        empID = res.employee_id;
+                    }
+                });
+
+                roleObjArray.forEach(role => {
+                    if(answers.roleChoice === role.title){
+                        roleID = role.role_id;
+                    }
+                });
+
+                console.log(empID, roleID);
+
+                connection.query("UPDATE employee SET ? WHERE ?", 
+                [
+                    {
+                        role_id: roleID
+                    },
+                    {
+                        employee_id: empID
+                    }
+                ],
+                (err,res) => {
+                    console.log("employee updated");
+                    start();
+                });
+            });
     });
 };
