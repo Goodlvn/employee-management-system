@@ -303,7 +303,6 @@ function updateRoles() {
 };
 
 function viewByDept() {
-
     
     connection.query("SELECT * FROM department", (err, res) => {
         let deptChoices = [];

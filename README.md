@@ -33,24 +33,24 @@ This is commandline lets you keep track of your employees! Add employees to the 
 
 <table>
   <tr>
-    <td>Select Class and input info</td>
-     <td>Add another Team member</td>
+    <td>Initial Prompt</td>
+     <td>View All Employees</td>
   </tr>
   <tr>
-    <td valign="top"><img src="./Assets/images/te-1.png" width="500px"></td>
-    <td valign="top"><img src="./Assets/images/te-2.png" width="500px"></td>
+    <td valign="top"><img src="./assets/images/emp01.png" width="500px"></td>
+    <td valign="top"><img src="./assets/images/emp02.png" width="500px"></td>
   </tr>
   <tr>
-     <td>All Done!</td>
-     <td>Display in browser</td>
+     <td>Add A New Employee</td>
+     <td>View All Roles</td>
   </tr>
   <tr>
-    <td valign="top"><img src="./Assets/images/te-3.png" width="500px"></td>
-    <td valign="top"><img src="./Assets/images/te-4.png" width="500px"></td>
+    <td valign="top"><img src="./assets/images/emp03.png" width="500px"></td>
+    <td valign="top"><img src="./assets/images/emp04.png" width="500px"></td>
   </tr>
  </table>
 
-  *You can also check out a [video demonstration](https://www.youtube.com/watch?v=BemDmTusbpI)*
+  *You can also check out a [video demonstration](NEEEDS VIDEO - PUBLISH AFTER UPLOAD)*
 
 ## Installation
 
@@ -62,102 +62,66 @@ npm install mysql inquirer console.table --save
 
 ## Usage 
 
-To start the application you will have to download the source files into a working directory on your computer. Once you do you can open the working directory in Terminal(mac users) or Bash(windows users) to init the funciton. Before you do make sure you have inquirer installed as this is a hard depandancy for this application. 
+In order to use the application you will have to have download mysql and inquirer. I also recommend downloading consoel.table! It will give the application the same feel as the ones in the preview images. Once you have those installed you can initiate the application using *node emp.js*. You will also need to initialize the database on the local host 3306. please look at the code block below to make sure that you have the correct values for your instance of this application. You can use the code in *schema.sql* to create the layout of the database. If you would like to seed the database there is some executable code in *seeds.sql*
 
-Once initialized you will be prompted to select between the type of employee you want to add (Manager, Engineer, or Intern). Depemnding on the type of employee you choose different questions will be promptd: name, id, and email are all input information that are shared by the employee classes. When you are done adding the current team member you will be prompted once again to add a new team member. 
+```
+const connection = mysql.createConnection({
+    host: "localhost",
+    port: 3306,
+    user: "root",
+    password: "password",
+    database: "emp_trackerDB"
+});
+```
 
-Once you are satisfied with the team you can select the "All Done!" option to end the loop and fetch the team list. The template will be rendered as an html file in the output folder that is located in the same directory as the app.js file. Open it in your browser to view your team's information. 
+When the database is connected you can start the application and use the prompts to navigate the application. The code is still very buggy having no validators and has limited functionality. This was an MVP. Please stay tuned for updates!
 
 ## Project Significance
 
-This project stands out from the previous homework assignments in that it is the first instance of us using the browser and terminal to create an application. This is also our first implementation of classes. We are able to create specialized code blocks that are in charge of specific functionality. Instead of having one large js file that handles mutliple functions we used "module.exports" to divide and clean up our code. It allows for more readable and maintainible code. This was also our first homework assignment that included tests. I reall enjoyed the test. They gave more structure to the work flow and made it possible to break down a larger project into smaller chunks.
+This was our first project using sql! We created a database and combined it with skills that we learned in the past. It was really interesting to see how we can manipulate the data base using javascript.
 
 ## Code Highlights
 
-This is an example of having specialized code that takes care of one function. This js file took in information from the emploee.js file as well as sent out informtaion to be used in other sections of code.
+This function was one of the more satisfying chunks of code to complete. It took some time to get used to JOIN in mysql. Once I was able to get that down it was then a challenge to use the foreign key of each table to effect the display of another table. This function shows how I went about manipulating the database to get desired information. 
 
 ```
-const Employee = require("./Employee");
+function viewByDept() {
+    
+    connection.query("SELECT * FROM department", (err, res) => {
+        let deptChoices = [];
+        let deptID;
 
-class Manager extends Employee {
-    constructor(name, id, email, officeNumber){
-        super(name, id, email);
-        this.role = "Manager";
-        this.officeNumber = officeNumber;
-    };
+        res.forEach(res => deptChoices.push(res.department));
 
-    getOfficeNumber (){
-        return this.officeNumber;
-    };
+        inquirer
+            .prompt([
+                {
+                    type: "list",
+                    message: "What department would you like to look at?",
+                    choices: deptChoices,
+                    name: "deptChoice"
+                }
+            ])
+            .then(answers => {
 
-};
+                res.forEach(res => {
+                    if (res.department === answers.deptChoice) {
+                        deptID = res.department_id;
 
-module.exports = Manager;
-```
+                    };
+                });
 
-I was also satisfied with my use of switch cases in this homework assignment. Using switch cases allowed me to simplify my code while still giving me the ability to prompt different questions based on the different employee types.
-```
-function addTeamMember() {
-    inquirer
-        .prompt([
+                connection.query(`SELECT employee_id, first_name, last_name, role.title
+                        FROM employee INNER JOIN role ON employee.role_id=role.role_id 
+                        WHERE role.department_id= ?;`, [deptID],
+                    (err, res) => {
+                        if (err) throw err;
 
-            {
-                type: "list",
-                message: "What kind of team member would you like to add?",
-                choices: ["Manager", "Engineer", "Intern", "All Done"],
-                name: "memberClass",
-            },
-        ])
-        .then(answer => {
-
-            switch (answer.memberClass) {
-
-                case "Manager":
-                    console.log("You chose Manager");
-                    promptManagerQs();
-                    break;
-
-                case "Engineer":
-                    console.log("You chose Engineer");
-                    promptEngineerQs();
-                    break;
-
-                case "Intern":
-                    console.log("You chose Intern");
-                    promptInternQs();
-                    break;
-
-                case "All Done":
-                    fs.writeFile(outputPath, render(teamMembers), err => {
-                        if(err) throw err;
-                        console.log("Congrats! Check out your Team!");
+                        console.table(res);
+                        start();
                     });
-                    break;
-            };
-        })
-        .catch(() => {
-            console.log("Can not render list in current environment");
-        });
-};
-```
-
-```
-function createTMobj(answers, type) {
-    let newTM;
-    switch (type) {
-        case "Manager":
-            newTM = new Manager(answers.name, answers.id, answers.email, answers.officeNumber);
-            break;
-        case "Engineer":
-            newTM = new Engineer(answers.name, answers.id, answers.email, answers.github);
-            break;
-        case "Intern":
-            newTM = new Intern(answers.name, answers.id, answers.email, answers.school);
-            break;
-    };
-
-    teamMembers.push(newTM);
-    addTeamMember();
+            });
+    });
 };
 ```
 
