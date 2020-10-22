@@ -13,17 +13,33 @@ const connection = mysql.createConnection({
 connection.connect((err) => {
     if (err) throw err;
     console.log("connected as id " + connection.threadId);
+
+    consoleBanner();
     start();
 });
 
+function consoleBanner() {
+    console.log(`
+    ......................
+  :  ....................  :
+    :                    : 
+  :  > EMPLOYEE TRACKER <  :
+    :                    :
+  :  ....................  :
+    ......................
+     
+    `)
+};
+
 function start() {
+
     inquirer
         .prompt([
             {
                 type: "list",
                 message: "What would you like to do?",
                 choices: ["Add Employee", "Add Department", "Add Role", "View All Employees", "View All Departments", "View All Roles",
-                    "Update Employee Roles", "View Employees By Department"],
+                    "Update Employee Roles", "View Employees By Department", "Exit"],
                 name: "initQuery"
             }
         ])
@@ -54,12 +70,17 @@ function start() {
                 case "View Employees By Department":
                     viewByDept();
                     break;
-                default:
-                    console.log("Or do the default");
-
+                case "Exit":
+                    console.log("See you later!");
+                    end();
+                    break;
             };
         });
 };
+
+function end() {
+    connection.end();
+}
 
 function addDept() {
     inquirer
@@ -77,7 +98,7 @@ function addDept() {
                 },
                 (err, res) => {
                     if (err) throw err;
-                    console.log("Department added!");
+                    console.log("DEPARTMENT ADDED!");
                     start();
                 });
         });
@@ -130,7 +151,7 @@ function addRole() {
                     },
                     (err, res) => {
                         if (err) throw err;
-                        console.log("Position added!");
+                        console.log("POSITION ADDED!");
                         start();
                     });
             });
@@ -181,10 +202,10 @@ function addEmp() {
                     },
                     (err, res) => {
                         if (err) throw err;
-                        console.log("Employee Added!");
+                        console.log("EMPLOYEE ADDED!");
                         start();
                     });
-            })
+            });
     });
 };
 
@@ -274,7 +295,7 @@ function updateRoles() {
                         }
                     ],
                     (err, res) => {
-                        console.log("employee updated");
+                        console.log("EMPLOYEE UPDATED");
                         start();
                     });
             });
@@ -287,9 +308,6 @@ function viewByDept() {
     connection.query("SELECT * FROM department", (err, res) => {
         let deptChoices = [];
         let deptID;
-
-
-        // console.log(res);
 
         res.forEach(res => deptChoices.push(res.department));
 
@@ -318,12 +336,8 @@ function viewByDept() {
                         if (err) throw err;
 
                         console.table(res);
+                        start();
                     });
-
-
-
             });
     });
-
-
 };
