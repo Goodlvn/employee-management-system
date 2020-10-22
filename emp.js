@@ -23,7 +23,7 @@ function start() {
                 type: "list",
                 message: "What would you like to do?",
                 choices: ["Add Employee", "Add Department", "Add Role", "View All Employees", "View All Departments", "View All Roles",
-                    "Update Employee Roles"],
+                    "Update Employee Roles", "View Employees By Department"],
                 name: "initQuery"
             }
         ])
@@ -50,6 +50,9 @@ function start() {
                     break;
                 case "Update Employee Roles":
                     updateRoles();
+                    break;
+                case "View Employees By Department":
+                    viewByDept();
                     break;
                 default:
                     console.log("Or do the default");
@@ -245,7 +248,7 @@ function updateRoles() {
                 },
             ])
             .then(answers => {
-                
+
                 var empID;
                 var roleID;
 
@@ -256,26 +259,71 @@ function updateRoles() {
                 });
 
                 roleObjArray.forEach(role => {
-                    if(answers.roleChoice === role.title){
+                    if (answers.roleChoice === role.title) {
                         roleID = role.role_id;
                     }
                 });
 
-                console.log(empID, roleID);
-
-                connection.query("UPDATE employee SET ? WHERE ?", 
-                [
-                    {
-                        role_id: roleID
-                    },
-                    {
-                        employee_id: empID
-                    }
-                ],
-                (err,res) => {
-                    console.log("employee updated");
-                    start();
-                });
+                connection.query("UPDATE employee SET ? WHERE ?",
+                    [
+                        {
+                            role_id: roleID
+                        },
+                        {
+                            employee_id: empID
+                        }
+                    ],
+                    (err, res) => {
+                        console.log("employee updated");
+                        start();
+                    });
             });
     });
+};
+
+function viewByDept() {
+
+    
+    connection.query("SELECT * FROM department", (err, res) => {
+        let deptChoices = [];
+        let deptID;
+
+
+        // console.log(res);
+
+        res.forEach(res => deptChoices.push(res.department));
+
+        inquirer
+            .prompt([
+                {
+                    type: "list",
+                    message: "What department would you like to look at?",
+                    choices: deptChoices,
+                    name: "deptChoice"
+                }
+            ])
+            .then(answers => {
+
+                res.forEach(res => {
+                    if (res.department === answers.deptChoice) {
+                        deptID = res.department_id;
+
+                    };
+                });
+
+                connection.query(`SELECT employee_id, first_name, last_name, role.title
+                        FROM employee INNER JOIN role ON employee.role_id=role.role_id 
+                        WHERE role.department_id= ?;`, [deptID],
+                    (err, res) => {
+                        if (err) throw err;
+
+                        console.table(res);
+                    });
+
+
+
+            });
+    });
+
+
 };
