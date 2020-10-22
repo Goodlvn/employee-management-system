@@ -50,7 +50,7 @@ This is commandline lets you keep track of your employees! Add employees to the 
   </tr>
  </table>
 
-  *You can also check out a [video demonstration](NEEEDS VIDEO - PUBLISH AFTER UPLOAD)*
+  *You can also check out a [video demonstration](https://youtu.be/mpWf1d3-6Ds)*
 
 ## Installation
 
